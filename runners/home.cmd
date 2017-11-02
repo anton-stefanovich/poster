@@ -1,0 +1,1 @@
+call python ../PosterMain.py --type=home --repeat=10 --delay=3600
