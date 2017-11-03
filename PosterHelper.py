@@ -1,5 +1,6 @@
 from pyshorteners import Shortener
 import twitter
+import facebook
 import time
 
 
@@ -12,6 +13,24 @@ class PosterHelper:
             'access_key':      '168206572-Qc7YjjfzthILxPInAxxL0EO6IhYjEapoBkLEfD8D',
             'access_secret':   'wrkWlL0Txs62wPevV99RUBcBGoW9aOtF5BdYTvo53KUNc',
         }
+
+    @staticmethod
+    def debug_facebook_token():
+        return PosterHelper.get_facebook_token('373574129759628')
+
+    @staticmethod
+    def get_facebook_token(page_id):
+        access_token = None
+        user_access_token = 'EAAcD5OvwFogBANMvKKkZCtH0KOqsj0mZCaZBj2VAPEUlNWtVVgLZCtKlxni6vwi7MnusJEKdAcnVt7VDwQ1RZBDd9A7ZBMI5o0TmHO7YZClhgRbScB96YtIfMxSOK6OQwDKZCZBJ5Y2nKy1YqjdxHa2uQyKsju2vseiTWLJBLK5y1QQZDZD'
+
+        graph = facebook.GraphAPI(user_access_token)
+        accounts = graph.get_object('me/accounts')
+
+        for page in accounts.get('data'):
+            if page['id'] == page_id:
+                access_token = page['access_token']
+
+        return access_token
 
     @staticmethod
     def get_short_link(url):
@@ -47,3 +66,14 @@ class PosterHelper:
             access_token_secret=token.get('access_secret'))
 
         api.PostUpdate(status_text, media=status_media)
+
+    @staticmethod
+    def post_facebook_record(info, token):
+        message_length = 256
+        message = info.pop('message')
+        message_suffix = '.. ' if len(message) > message_length else ' '
+        message_suffix += PosterHelper.get_short_link(info.link)
+        message = message[:message_length] + message_suffix
+
+        api = facebook.GraphAPI(token)
+        api.put_wall_post(message, info)

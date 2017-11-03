@@ -1,11 +1,12 @@
 from HomeItem import HomeItem
+from PosterMaster import PosterMaster
 from PosterHelper import PosterHelper
 from selenium import webdriver
 
 import random
 
 
-class HomeMaster:
+class HomeMaster (PosterMaster):
     url_base = 'http://homeoftampabay.kwrealty.com'
     url_search = '/map/searchid/'
     url_search_ids = ['17749077']
@@ -18,6 +19,10 @@ class HomeMaster:
             'access_key': '1411815349-lQy2Om1LVcuRamjRlxLcGgT050CmcjAXJR2UPpX',
             'access_secret': 'CHyauYMUNkypp5S0GxwyehQMno99vt1eM4riKqI8j0v9x',
         }
+
+    @staticmethod
+    def get_facebook_token():
+        return PosterHelper.get_facebook_token('202051909850508')
 
     @staticmethod
     def get_records(count):

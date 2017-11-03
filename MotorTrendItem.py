@@ -1,19 +1,14 @@
-import os
-# from PosterHelper import PosterHelper
+from PosterItem import PosterItem
 
 
-class MotorTrendItem:
-    # id = str()
+class MotorTrendItem (PosterItem):
     url = str()
     title = str()
-    # summary = str()
     images = list()
 
     def __init__(self, wrapper_node):
-        # self.id = MotoTrendItem.get_id(wrapper_node)
         self.url = MotorTrendItem.get_url(wrapper_node)
         self.title = MotorTrendItem.get_title(wrapper_node)
-        # self.summary = MotoTrendItem.get_summary(wrapper_node)
         self.images = [MotorTrendItem.get_images(wrapper_node)]
 
     @staticmethod
@@ -49,25 +44,6 @@ class MotorTrendItem:
             summary = summary.strip()
 
         return summary
-
-    @staticmethod
-    def save_images(driver, images, path):
-        if not os.path.exists(path):
-            os.mkdir(path)
-
-        local_images = list()
-        for image in images:
-            link = image.get('link')
-            name = image.get('id') + '.png'
-
-            driver.get(link)
-            image_object = driver.find_element_by_tag_name('img')
-
-            image_path = path + os.sep + name
-            image_object.screenshot(image_path)
-            local_images.append(image_path)
-
-        return local_images
 
     def get_twitter_info(self):
         return {

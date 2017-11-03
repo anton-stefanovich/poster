@@ -1,12 +1,14 @@
 from CarAndDriverItem import CarAndDriverItem
 from MotorTrendItem import MotorTrendItem
+from PosterMaster import PosterMaster
 from PosterHelper import PosterHelper
 from selenium import webdriver
 
+# system
 import random
 
 
-class AutoMaster:
+class AutoMaster (PosterMaster):
     url_caranddriver = 'https://blog.caranddriver.com/'
     url_motortrend = 'http://www.motortrend.com/auto-news/'
 

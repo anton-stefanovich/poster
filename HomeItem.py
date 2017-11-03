@@ -1,8 +1,12 @@
+# system
 import os
+
+# custom
 from PosterHelper import PosterHelper
+from PosterItem import PosterItem
 
 
-class HomeItem:
+class HomeItem (PosterItem):
     id = str()
     url = str()
     summary = str()
@@ -19,8 +23,11 @@ class HomeItem:
         self.summary = self.get_summary(driver)
         self.payment = self.get_payment(driver)
 
-        self.images = self.save_images(
-            driver, self.images, 'pictures' + os.sep + self.id)
+        for image in self.images:
+            image.update({
+                'file': self.save_image(
+                    driver, image.get('link'), image.get('id'),
+                    'pictures' + os.sep + self.id)})
 
     @staticmethod
     def get_images(driver):
@@ -54,28 +61,28 @@ class HomeItem:
         payment_object = driver.find_element_by_id('aria-estimatedpayment')
         return payment_object.text
 
-    @staticmethod
-    def save_images(driver, images, path):
-        if not os.path.exists(path):
-            os.mkdir(path)
-
-        local_images = list()
-        for image in images:
-            link = image.get('link')
-            name = image.get('id') + '.png'
-
-            driver.get(link)
-            image_object = driver.find_element_by_tag_name('img')
-
-            image_path = path + os.sep + name
-            image_object.screenshot(image_path)
-            local_images.append(image_path)
-
-        return local_images
-
     def get_twitter_info(self):
+        images = list()
+        if self.images:
+            for image in self.images[:4]:
+                images.append(image.get('file'))
+
         return {
+            'images': images,
             'status': self.summary,
-            'images': self.images[:4],
             'link':   PosterHelper.get_short_link(self.url),
+        }
+
+    def get_facebook_info(self):
+        picture = self.images[0].get('link') \
+            if self.images and len(self.images) else None
+
+        message = self.summary
+        if len(self.payment):
+            message = 'Monthly payment: only ' + self.payment + '! ' + message
+
+        return {
+            'message': message,
+            'picture': picture,
+            'link': self.url,
         }
