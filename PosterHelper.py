@@ -72,7 +72,7 @@ class PosterHelper:
         message_length = 256
         message = info.pop('message')
         message_suffix = '.. ' if len(message) > message_length else ' '
-        message_suffix += PosterHelper.get_short_link(info.link)
+        message_suffix += PosterHelper.get_short_link(info.get('link'))
         message = message[:message_length] + message_suffix
 
         api = facebook.GraphAPI(token)
