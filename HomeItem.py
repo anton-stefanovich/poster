@@ -69,7 +69,7 @@ class HomeItem (PosterItem):
 
         return {
             'images': images,
-            'status': '#RealEstate ' + self.summary,
+            'status': '#RealEstate ' + self.payment + '/m! ' + self.summary,
             'link':   PosterHelper.get_short_link(self.url),
         }
 
