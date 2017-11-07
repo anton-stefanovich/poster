@@ -9,7 +9,8 @@ import random
 class HomeMaster (PosterMaster):
     url_base = 'http://homeoftampabay.kwrealty.com'
     url_search = '/map/searchid/'
-    url_search_ids = ['17749077']
+    url_search_ids = ['17749077', '17827006', '17827014', '17827017',
+                      '17827030', '17827032', '17827033', '17827034']
 
     @staticmethod
     def get_twitter_token():
@@ -27,30 +28,31 @@ class HomeMaster (PosterMaster):
     @staticmethod
     def get_records(count):
         driver = webdriver.Firefox()
-        PosterHelper.get_ajax_page(
-            driver, HomeMaster.url_base + HomeMaster.url_search + HomeMaster.url_search_ids[0])
-
-        elements = driver.find_elements_by_class_name('card-flex-container')
-        indexes = random.sample(range(len(elements)), count)
-        assert count == len(indexes)
 
         records = list()
-        for index in indexes:
-            element = elements[index]
-            favorite = element.find_element_by_class_name('favorite')
-            records.append({
-                'url': HomeMaster.url_base + element.get_attribute('data-link'),
-                'id':  favorite.get_attribute('property-number')
-            })
+        for url_search_id in HomeMaster.url_search_ids:
+            PosterHelper.get_ajax_page(
+                driver, HomeMaster.url_base + HomeMaster.url_search + url_search_id)
+
+            elements = driver.find_elements_by_class_name('card-flex-container')
+            for element in elements:
+                favorite = element.find_element_by_class_name('favorite')
+                records.append({
+                    'url': HomeMaster.url_base + element.get_attribute('data-link'),
+                    'id': favorite.get_attribute('property-number')
+                })
+
+        indexes = random.sample(range(len(records)), count)
+        assert count == len(indexes)
 
         homes = list()
-        assert count == len(records)
-        for apartment in records:
+        for index in indexes:
+            record = records[index]
             homes.append(
                 HomeItem(
                     driver=driver,
-                    url=apartment.get('url'),
-                    id=apartment.get('id')))
+                    url=record.get('url'),
+                    id=record.get('id')))
 
         assert count == len(homes)
         driver.close()
