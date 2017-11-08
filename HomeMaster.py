@@ -9,8 +9,8 @@ import random
 class HomeMaster (PosterMaster):
     url_base = 'http://homeoftampabay.kwrealty.com'
     url_search = '/map/searchid/'
-    url_search_ids = ['17749077', '17827006', '17827014', '17827017',
-                      '17827030', '17827032', '17827033', '17827034']
+    url_search_ids = ['17749077', '17827006', '17827014', '17827017', '17827030',
+                      '17827032', '17827033', '17827034', '17835346', '17835369']
 
     @staticmethod
     def get_twitter_token():
@@ -30,7 +30,11 @@ class HomeMaster (PosterMaster):
         driver = webdriver.Firefox()
 
         records = list()
-        for url_search_id in HomeMaster.url_search_ids:
+        search_size = len(HomeMaster.url_search_ids)
+        indexes = random.sample(range(search_size),
+                                count if count < search_size else search_size)
+        for index in indexes:
+            url_search_id = HomeMaster.url_search_ids[index]
             PosterHelper.get_ajax_page(
                 driver, HomeMaster.url_base + HomeMaster.url_search + url_search_id)
 

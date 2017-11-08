@@ -6,7 +6,6 @@ from PosterItem import PosterItem
 
 
 class CarAndDriverItem (PosterItem):
-    id = str()
     url = str()
     title = str()
     summary = str()

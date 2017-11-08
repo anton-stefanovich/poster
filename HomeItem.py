@@ -7,7 +7,6 @@ from PosterItem import PosterItem
 
 
 class HomeItem (PosterItem):
-    id = str()
     url = str()
     summary = str()
     payment = str()

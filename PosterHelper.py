@@ -1,3 +1,4 @@
+from PIL import Image, ImageColor
 from pyshorteners import Shortener
 import twitter
 import facebook
@@ -77,3 +78,34 @@ class PosterHelper:
 
         api = facebook.GraphAPI(token)
         api.put_wall_post(message, info)
+
+    @staticmethod
+    def normalize_image(path):
+        image = Image.open(path)
+        image = PosterHelper.crop_image(image)
+        image.save(path)
+
+    @staticmethod
+    def crop_image(image):
+        pix = image.load()
+        image_size_x, image_size_y = image.size
+        crop_factor = sum(ImageColor.getrgb('white')) - 5
+        crop_xl, crop_yt, crop_xr, crop_yb = 0, 0, 0, 0
+
+        for crop_xl in range(image_size_x):
+            if sum(pix[crop_xl, image_size_y/2]) < crop_factor:
+                break
+
+        for crop_xr in reversed(range(image_size_x)):
+            if sum(pix[crop_xr, image_size_y / 2]) < crop_factor:
+                break
+
+        for crop_yt in range(image_size_y):
+            if sum(pix[image_size_x/2, crop_yt]) < crop_factor:
+                break
+
+        for crop_yb in reversed(range(image_size_y)):
+            if sum(pix[image_size_x / 2, crop_yb]) < crop_factor:
+                break
+
+        return image.crop((crop_xl, crop_yt, crop_xr, crop_yb))

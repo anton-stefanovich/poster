@@ -7,6 +7,7 @@ class MotorTrendItem (PosterItem):
     images = list()
 
     def __init__(self, wrapper_node):
+        self.id = MotorTrendItem.get_id(wrapper_node)
         self.url = MotorTrendItem.get_url(wrapper_node)
         self.title = MotorTrendItem.get_title(wrapper_node)
         self.images = [MotorTrendItem.get_images(wrapper_node)]

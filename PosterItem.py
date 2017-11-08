@@ -3,6 +3,8 @@ from PosterHelper import PosterHelper
 
 
 class PosterItem:
+    id = None
+
     @staticmethod
     def save_images(driver, images, path):
         local_images = list()
@@ -23,6 +25,8 @@ class PosterItem:
 
         image_path = path + os.sep + name + '.png'
         image_object.screenshot(image_path)
+
+        PosterHelper.normalize_image(image_path)
 
         return image_path
 
