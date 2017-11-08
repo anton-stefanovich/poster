@@ -48,17 +48,13 @@ class PosterHelper:
     @staticmethod
     def post_twitter_status(info, token):
         status_length = 140
-        status_suffix = '.. ' \
-            if len(info['status']) > status_length else ' '
         status_link_pattern = 'https://t.co/1234567890'
-        status_index_crop = status_length \
-            - len(status_link_pattern) \
-            - len(status_suffix)
 
         status_media = info['images'][:4]
-        status_link = info['link']  # PosterHelper.get_short_link(info['link'])
-        status_short = info['status'][:status_index_crop].strip()
-        status_text = status_short + status_suffix + status_link
+        status_link = info['link']
+        status_text = PosterHelper.crop_text(
+            info['status'], status_length - len(status_link_pattern),
+            suffix=' ') + status_link
 
         api = twitter.Api(
             consumer_key=token.get('consumer_key'),
@@ -71,10 +67,9 @@ class PosterHelper:
     @staticmethod
     def post_facebook_record(info, token):
         message_length = 256
-        message = info.pop('message')
-        message_suffix = '.. ' if len(message) > message_length else ' '
-        message_suffix += PosterHelper.get_short_link(info.get('link'))
-        message = message[:message_length] + message_suffix
+        message = PosterHelper.crop_text(
+            info.pop('message'), message_length,
+            suffix=' ' + info.get('link'))
 
         api = facebook.GraphAPI(token)
         api.put_wall_post(message, info)
@@ -89,7 +84,7 @@ class PosterHelper:
     def crop_image(image):
         pix = image.load()
         image_size_x, image_size_y = image.size
-        crop_factor = sum(ImageColor.getrgb('white')) - 5
+        crop_factor = sum(ImageColor.getrgb('white')) - 17
         crop_xl, crop_yt, crop_xr, crop_yb = 0, 0, 0, 0
 
         for crop_xl in range(image_size_x):
@@ -109,3 +104,12 @@ class PosterHelper:
                 break
 
         return image.crop((crop_xl, crop_yt, crop_xr, crop_yb))
+
+    @staticmethod
+    def crop_text(text, max_length, prefix=str(), suffix=str()):
+        max_length -= len(prefix) + len(suffix)
+        if len(text) > max_length:
+            text = text[:max_length - 2] + '..'
+
+        text += suffix
+        return prefix + text

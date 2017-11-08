@@ -83,5 +83,5 @@ class HomeItem (PosterItem):
         return {
             'message': message,
             'picture': picture,
-            'link': self.url,
+            'link': PosterHelper.get_short_link(self.url),
         }
