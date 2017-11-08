@@ -39,8 +39,8 @@ class HomeItem (PosterItem):
             image_lazy = image_object.get_attribute('data-lazy')
             image_src = image_object.get_attribute('src')
 
-            image_link = image_src \
-                if image_src else image_lazy
+            image_link = image_src if image_src else image_lazy
+            image_link = image_link[:image_link.find('?') + 1].strip('?')
 
             if image_id and 'f_' in image_link:
                 images.append({
