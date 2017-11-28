@@ -3,6 +3,7 @@ from pyshorteners import Shortener
 import twitter
 import facebook
 import time
+import random
 
 
 class PosterHelper:
@@ -81,26 +82,25 @@ class PosterHelper:
         image.save(path)
 
     @staticmethod
-    def crop_image(image):
+    def crop_image(image, color='white', delta=32):
         pix = image.load()
-        image_size_x, image_size_y = image.size
-        crop_factor = sum(ImageColor.getrgb('white')) - 17
+        crop_factor = sum(ImageColor.getrgb(color)) - delta
         crop_xl, crop_yt, crop_xr, crop_yb = 0, 0, 0, 0
 
-        for crop_xl in range(image_size_x):
-            if sum(pix[crop_xl, image_size_y/2]) < crop_factor:
+        for crop_xl in range(image.width):
+            if sum(pix[crop_xl, image.height * random.random()][:3]) < crop_factor:
                 break
 
-        for crop_xr in reversed(range(image_size_x)):
-            if sum(pix[crop_xr, image_size_y / 2]) < crop_factor:
+        for crop_xr in reversed(range(image.width)):
+            if sum(pix[crop_xr, image.height * random.random()][:3]) < crop_factor:
                 break
 
-        for crop_yt in range(image_size_y):
-            if sum(pix[image_size_x/2, crop_yt]) < crop_factor:
+        for crop_yt in range(image.height):
+            if sum(pix[image.width * random.random(), crop_yt][:3]) < crop_factor:
                 break
 
-        for crop_yb in reversed(range(image_size_y)):
-            if sum(pix[image_size_x / 2, crop_yb]) < crop_factor:
+        for crop_yb in reversed(range(image.height)):
+            if sum(pix[image.width * random.random(), crop_yb][:3]) < crop_factor:
                 break
 
         return image.crop((crop_xl, crop_yt, crop_xr, crop_yb))
