@@ -7,10 +7,15 @@ class MotorTrendItem (PosterItem):
     images = list()
 
     def __init__(self, wrapper_node):
-        self.id = MotorTrendItem.get_id(wrapper_node)
-        self.url = MotorTrendItem.get_url(wrapper_node)
-        self.title = MotorTrendItem.get_title(wrapper_node)
-        self.images = [MotorTrendItem.get_images(wrapper_node)]
+        if not MotorTrendItem.is_sponsored_content(wrapper_node):
+            self.id = MotorTrendItem.get_id(wrapper_node)
+            self.url = MotorTrendItem.get_url(wrapper_node)
+            self.title = MotorTrendItem.get_title(wrapper_node)
+            self.images = [MotorTrendItem.get_images(wrapper_node)]
+
+    @staticmethod
+    def is_sponsored_content(node):
+        return len(node.find_elements_by_class_name('prx-promoted'))
 
     @staticmethod
     def get_id(node):

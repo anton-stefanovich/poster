@@ -18,7 +18,7 @@ class PosterItem:
     @staticmethod
     def save_image(driver, link, name, path):
         if not os.path.exists(path):
-            os.mkdir(path)
+            os.makedirs(path, exist_ok=True)
 
         driver.get(link)
         image_object = driver.find_element_by_tag_name('img')

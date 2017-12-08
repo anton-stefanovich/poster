@@ -1,5 +1,5 @@
 from PIL import Image, ImageColor
-from pyshorteners import Shortener
+from pyshorteners import Shortener, exceptions
 import twitter
 import facebook
 import time
@@ -7,6 +7,16 @@ import random
 
 
 class PosterHelper:
+    ATTEMPTS_DEFAULT = 3
+    ATTEMPTS_SHORTENER = ATTEMPTS_DEFAULT
+    ATTEMPTS_FACEBOOK = ATTEMPTS_DEFAULT
+    ATTEMPTS_TWITTER = ATTEMPTS_DEFAULT
+
+    AJAX_DELAY_SHORT = 3
+    AJAX_DELAY_NORMAL = 7
+    AJAX_DELAY_LONG = 13
+    AJAX_DELAY_DEFAULT = AJAX_DELAY_SHORT
+
     @staticmethod
     def debug_twitter_token():
         return {
@@ -35,16 +45,42 @@ class PosterHelper:
         return access_token
 
     @staticmethod
-    def get_short_link(url):
-        # shortener = Shortener('Bitly', bitly_token='7728f16fbbc67269fca96de5887ec868e9040ff8')
-        return Shortener('Google', api_key='AIzaSyASRIF0WJPftrc-KYtGftWYjUJ8yokqn_c').short(url)
+    def get_short_link(url, shortener='Google', token=None):
+        print('Generating short link for \'%s\'' % url)
+
+        if not token:
+            if shortener == 'Google':
+                token = 'AIzaSyASRIF0WJPftrc-KYtGftWYjUJ8yokqn_c'
+
+            elif shortener == 'Bitly':
+                token = '7728f16fbbc67269fca96de5887ec868e9040ff8'
+
+        link = None
+        for attempt in range(PosterHelper.ATTEMPTS_SHORTENER):
+            print('Attempt #%d' % (attempt + 1))
+            try:
+                link = Shortener(shortener, api_key=token, bitly_token=token).short(url)
+                break
+
+            except (TypeError, ValueError) as error:
+                print('Wrong type or value exception: %s' % error)
+
+            except (exceptions.ExpandingErrorException,
+                    exceptions.ShorteningErrorException,
+                    exceptions.UnknownShortenerException) as error:
+                print('Shortener exception: %s' % error)
+
+            except:
+                print('Unknown error occur')
+
+        return link
 
     @staticmethod
-    def get_ajax_page(driver, url):
+    def get_ajax_page(driver, url, delay=AJAX_DELAY_DEFAULT):
         assert driver
         driver.get(url)
 
-        time.sleep(5)
+        time.sleep(delay)
 
     @staticmethod
     def post_twitter_status(info, token):
@@ -63,22 +99,33 @@ class PosterHelper:
             access_token_key=token.get('access_key'),
             access_token_secret=token.get('access_secret'))
 
+        print('Posting twitter status: \'%s\'' % status_text)
         api.PostUpdate(status_text, media=status_media)
 
     @staticmethod
     def post_facebook_record(info, token):
         message_length = 256
+        api = facebook.GraphAPI(token)
         message = PosterHelper.crop_text(
             info.pop('message'), message_length,
             suffix=' ' + info.get('link'))
 
-        api = facebook.GraphAPI(token)
-        api.put_wall_post(message, info)
+        print('Posting facebook message: \'%s\'' % message)
+        for attempt in range(PosterHelper.ATTEMPTS_FACEBOOK):
+            try:
+                api.put_wall_post(message, info)
+                break
+
+            except:
+                pass
 
     @staticmethod
     def normalize_image(path):
+        print('Normalizing image \'%s\'' % path)
         image = Image.open(path)
         image = PosterHelper.crop_image(image)
+
+        print('Saving image \'%s\'' % path)
         image.save(path)
 
     @staticmethod
@@ -109,7 +156,7 @@ class PosterHelper:
     def crop_text(text, max_length, prefix=str(), suffix=str()):
         max_length -= len(prefix) + len(suffix)
         if len(text) > max_length:
-            text = text[:max_length - 2] + '..'
+            text = text[:max_length - 2].strip() + '..'
 
         text += suffix
         return prefix + text

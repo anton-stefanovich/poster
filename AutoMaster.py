@@ -66,6 +66,8 @@ class AutoMaster (PosterMaster):
 
         records = list()
         for post_wrapper_object in post_wrapper_objects:
-            records.append(MotorTrendItem(post_wrapper_object))
+            record = MotorTrendItem(post_wrapper_object)
+            if len(record.title):
+                records.append(record)
 
         return records

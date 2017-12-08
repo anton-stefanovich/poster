@@ -1,6 +1,3 @@
-# system
-import os
-
 # custom
 from PosterItem import PosterItem
 

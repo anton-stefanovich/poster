@@ -27,14 +27,18 @@ class HomeMaster (PosterMaster):
 
     @staticmethod
     def get_records(count):
+        print('Getting %d home records' % count)
         driver = webdriver.Firefox()
 
         records = list()
         search_size = len(HomeMaster.url_search_ids)
         indexes = random.sample(range(search_size),
                                 count if count < search_size else search_size)
+        print('Search indexes: %s' % indexes)
+
         for index in indexes:
             url_search_id = HomeMaster.url_search_ids[index]
+            print('Homes search ID: %s' % url_search_id)
             PosterHelper.get_ajax_page(
                 driver, HomeMaster.url_base + HomeMaster.url_search + url_search_id)
 
@@ -46,10 +50,14 @@ class HomeMaster (PosterMaster):
                     'id': favorite.get_attribute('property-number')
                 })
 
+            print('%d houses was found' % len(elements))
+
+        print('Total elements: %d' % len(records))
         indexes = random.sample(range(len(records)), count)
         assert count == len(indexes)
 
         homes = list()
+        print('Getting homes info')
         for index in indexes:
             record = records[index]
             homes.append(
