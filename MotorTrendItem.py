@@ -1,4 +1,5 @@
-from PosterItem import PosterItem
+from PosterItem import *
+from PosterHelper import *
 
 
 class MotorTrendItem (PosterItem):
@@ -56,4 +57,14 @@ class MotorTrendItem (PosterItem):
             'status': self.title,
             'images': self.images[:4],
             'link':   self.url,
+        }
+
+    def get_facebook_info(self):
+        picture = self.images.pop() \
+            if self.images else None
+
+        return {
+            'message': self.title,
+            'picture': picture,
+            'link': PosterHelper.get_short_link(self.url),
         }

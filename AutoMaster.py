@@ -22,6 +22,10 @@ class AutoMaster (PosterMaster):
         }
 
     @staticmethod
+    def get_facebook_token():
+        return PosterHelper.get_facebook_token('835257239940494')
+
+    @staticmethod
     def get_records(count):
         driver = webdriver.Firefox()
 

@@ -1,5 +1,5 @@
-# custom
-from PosterItem import PosterItem
+from PosterItem import *
+from PosterHelper import *
 
 
 class CarAndDriverItem (PosterItem):
@@ -52,4 +52,14 @@ class CarAndDriverItem (PosterItem):
             'status': self.title + '. ' + self.summary,
             'images': self.images[:4],
             'link':   self.url,
+        }
+
+    def get_facebook_info(self):
+        picture = self.images.pop() \
+            if self.images else None
+
+        return {
+            'message': self.summary,
+            'picture': picture,
+            'link': PosterHelper.get_short_link(self.url),
         }
