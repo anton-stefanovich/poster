@@ -70,8 +70,11 @@ class AutoMaster (PosterMaster):
 
         records = list()
         for post_wrapper_object in post_wrapper_objects:
-            record = MotorTrendItem(post_wrapper_object)
-            if len(record.title):
-                records.append(record)
+            topic_elements = post_wrapper_object.find_elements_by_css_selector('.entry-topic')
+            if len(topic_elements) and \
+                    topic_elements.pop().text.upper().count('NEWS'):
+                record = MotorTrendItem(post_wrapper_object)
+                if len(record.title):
+                    records.append(record)
 
         return records
