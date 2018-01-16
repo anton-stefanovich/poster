@@ -9,8 +9,32 @@ import random
 class HomeMaster (PosterMaster):
     url_base = 'http://homeoftampabay.kwrealty.com'
     url_search = '/map/searchid/'
-    url_search_ids = ['17749077', '17827006', '17827014', '17827017', '17827030',
-                      '17827032', '17827033', '17827034', '17835346', '17835369']
+
+    search_map = {
+        '17835369': 'expensive',
+        '17749077': 'expensive',
+        '17827006': 'expensive',
+        '17827014': 'medium',
+        '17827017': 'medium',
+        '17827030': 'medium',
+        '17827032': 'medium',
+        '17827033': 'medium',
+        '17827034': 'cheap',
+        '17835346': 'cheap',
+    }
+
+    tags_map = {
+        'all': [
+            '#HomeBuying', '#HouseHunting', '#FirstHome', '#HomeSale', '#HomesForSale', '#Property', '#JustListed',
+            '#Properties', '#Investment', '#Home', '#Housing', '#Listing', '#Mortgage', '#EmptyNest'],
+        'cheap': [
+            '#FirstTimeHomeBuyer', '#DIY', '#DIYspecial', '#FixerUpper', '#Flipper', '#FlipHouse', '#TLCneeded',
+            '#DesignerSpecial', '#FirstHome', '#PricedToGo', '#BargainHunt', '#Bargain', '#MostBangForYourBuck'],
+        'medium': [
+            '#GreatValue', '#RightPrice', '#GreatDeal', '#DoneRight', '#PerfectPrice', '#Renovated'],
+        'expensive': [
+            '#DreamHouse', '#LuxuryRealEstate', '#LuxuryLiving', '#MillionDollarListing']
+    }
 
     @staticmethod
     def get_twitter_token():
@@ -31,13 +55,13 @@ class HomeMaster (PosterMaster):
         driver = webdriver.Firefox()
 
         records = list()
-        search_size = len(HomeMaster.url_search_ids)
-        indexes = random.sample(range(search_size),
-                                count if count < search_size else search_size)
+        search_size = len(HomeMaster.search_map)
+        indexes = random.sample(
+            HomeMaster.search_map.keys(),
+            count if count < search_size else search_size)
         print('Search indexes: %s' % indexes)
 
-        for index in indexes:
-            url_search_id = HomeMaster.url_search_ids[index]
+        for url_search_id in random.sample(indexes, count):
             print('Homes search ID: %s' % url_search_id)
             PosterHelper.get_ajax_page(
                 driver, HomeMaster.url_base + HomeMaster.url_search + url_search_id)
@@ -47,7 +71,11 @@ class HomeMaster (PosterMaster):
                 favorite = element.find_element_by_class_name('favorite')
                 records.append({
                     'url': HomeMaster.url_base + element.get_attribute('data-link'),
-                    'id': favorite.get_attribute('property-number')
+                    'id': favorite.get_attribute('property-number'),
+                    'tags': {
+                        'major': random.sample(HomeMaster.tags_map.get('all'), 1).pop(),
+                        'minor': random.sample(HomeMaster.tags_map.get(
+                            HomeMaster.search_map.get(url_search_id)), 1).pop()}
                 })
 
             print('%d houses was found' % len(elements))
@@ -63,8 +91,9 @@ class HomeMaster (PosterMaster):
             homes.append(
                 HomeItem(
                     driver=driver,
+                    id=record.get('id'),
                     url=record.get('url'),
-                    id=record.get('id')))
+                    tags=record.get('tags')))
 
         assert count == len(homes)
         driver.close()

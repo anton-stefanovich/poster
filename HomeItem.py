@@ -8,13 +8,15 @@ from PosterItem import PosterItem
 
 class HomeItem (PosterItem):
     url = str()
+    tags = dict()
     summary = str()
     payment = str()
     images = list()
 
-    def __init__(self, driver, url, id):
+    def __init__(self, driver, url, id, tags):
         self.id = id
         self.url = url
+        self.tags = tags
 
         PosterHelper.get_ajax_page(driver, url)
 
@@ -68,7 +70,8 @@ class HomeItem (PosterItem):
 
         return {
             'images': images,
-            'status': '#RealEstate ' + self.payment + '/m! ' + self.summary,
+            'status': '#RealEstate ' + self.tags.get('major') +
+                      ' ' + self.tags.get('minor') + ' ' + self.payment + '/m: ' + self.summary,
             'link':   PosterHelper.get_short_link(self.url),
         }
 
