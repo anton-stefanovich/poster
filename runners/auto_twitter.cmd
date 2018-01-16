@@ -1,1 +1,0 @@
-call python ../PosterMain.py --type=auto --destination=twitter --repeat=3 --delay=7000

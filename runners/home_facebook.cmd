@@ -1,1 +1,0 @@
-call python ../PosterMain.py --type=home --destination=facebook --repeat=3 --delay=10000
