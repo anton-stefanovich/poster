@@ -1,4 +1,3 @@
-import os
 from PosterHelper import PosterHelper
 
 
@@ -6,25 +5,21 @@ class PosterItem:
     id = None
 
     @staticmethod
-    def save_images(driver, images, path):
+    def save_images(images, path):
         local_images = list()
         for image in images:
             image_file = PosterItem.save_image(
-                driver, image.get('link'), image.get('id'), path)
+                image.get('link'), image.get('id'), path)
             local_images.append(image_file)
 
         return local_images
 
     @staticmethod
-    def save_image(driver, link, name, path):
-        if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
-
-        driver.get(link)
-        image_object = driver.find_element_by_tag_name('img')
-
-        image_path = path + os.sep + name + '.png'
-        image_object.screenshot(image_path)
+    def save_image(link, name, path):
+        name += link[link.rfind('.'):]
+        image_path = PosterHelper.save_file(
+                PosterHelper.download_file(link),
+                path, name, binary=True)
 
         PosterHelper.normalize_image(image_path)
 

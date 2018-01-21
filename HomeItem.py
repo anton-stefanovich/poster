@@ -27,7 +27,7 @@ class HomeItem (PosterItem):
         for image in self.images:
             image.update({
                 'file': self.save_image(
-                    driver, image.get('link'), image.get('id'),
+                    image.get('link'), image.get('id'),
                     'pictures' + os.sep + self.id)})
 
     @staticmethod

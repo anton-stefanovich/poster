@@ -52,7 +52,7 @@ class HomeMaster (PosterMaster):
     @staticmethod
     def get_records(count):
         print('Getting %d home records' % count)
-        driver = webdriver.Firefox()
+        driver = webdriver.Chrome()
 
         records = list()
         search_size = len(HomeMaster.search_map)

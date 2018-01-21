@@ -1,9 +1,11 @@
 from PIL import Image, ImageColor
 from pyshorteners import Shortener, exceptions
+import requests
 import twitter
 import facebook
 import time
 import random
+import os
 
 
 class PosterHelper:
@@ -119,6 +121,25 @@ class PosterHelper:
 
             except:
                 pass
+
+    @staticmethod
+    def save_file(content, path, filename=None, binary=False):
+        os.makedirs(path, exist_ok=True)
+
+        if filename and len(filename):
+            path += os.sep + filename
+
+        mode = 'wb' if binary else 'w'
+        file = open(path, mode)
+        file.write(content)
+        file.close()
+
+        return path
+
+    @staticmethod
+    def download_file(url):
+        data = requests.get(url)
+        return data.content
 
     @staticmethod
     def normalize_image(path):

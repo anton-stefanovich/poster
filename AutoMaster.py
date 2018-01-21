@@ -27,7 +27,7 @@ class AutoMaster (PosterMaster):
 
     @staticmethod
     def get_records(count):
-        driver = webdriver.Firefox()
+        driver = webdriver.Chrome()
 
         records = list()
         records += AutoMaster.get_motortrend_news(driver)
