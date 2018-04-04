@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--repeat', type=int, default=1)
     parser.add_argument('--delay', type=int, default=3600)
-    parser.add_argument('--destination', type=str, choices=['twitter', 'facebook'])
+    parser.add_argument('--media', '--destination', type=str, choices=['twitter', 'facebook'])
     parser.add_argument('--type', type=str, choices=['test', 'home', 'auto'])
     parser.add_argument('--debug', type=bool, nargs='?', const=True, default=False)
     args = parser.parse_args()

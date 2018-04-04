@@ -85,6 +85,28 @@ class PosterHelper:
         time.sleep(delay)
 
     @staticmethod
+    def __twitter_api(token):
+        return twitter.Api(
+            tweet_mode='extended',
+            consumer_key=token.get('consumer_key'),
+            consumer_secret=token.get('consumer_secret'),
+            access_token_key=token.get('access_key'),
+            access_token_secret=token.get('access_secret'))
+
+    @staticmethod
+    def subscribe_twitter():
+        api = PosterHelper.__twitter_api(
+            PosterHelper.debug_twitter_token())
+
+        # result = api.GetRetweetsOfMe()
+        # result = api.GetRetweeters()
+        # result = api.GetHomeTimeline()
+        result = api.GetFavorites('MetroMinistries')
+        # result = api.
+
+        print(result)
+
+    @staticmethod
     def post_twitter_status(info, token):
         status_length = 265
         status_link_pattern = 'https://t.co/1234567890'
@@ -95,15 +117,9 @@ class PosterHelper:
             info['status'], status_length - len(status_link_pattern),
             suffix=' ') + status_link
 
-        api = twitter.Api(
-            tweet_mode='extended',
-            consumer_key=token.get('consumer_key'),
-            consumer_secret=token.get('consumer_secret'),
-            access_token_key=token.get('access_key'),
-            access_token_secret=token.get('access_secret'))
-
         print('Posting twitter status: \'%s\'' % status_text)
-        api.PostUpdate(status_text, media=status_media, verify_status_length=False)
+        PosterHelper.__twitter_api(token).\
+            PostUpdate(status_text, media=status_media, verify_status_length=False)
 
     @staticmethod
     def post_facebook_record(info, token):
