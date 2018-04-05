@@ -43,8 +43,8 @@ def action(args):
     facebook_token = PosterHelper.debug_facebook_token() \
         if args.debug else master.get_facebook_token()
 
-    token = twitter_token if args.destination == 'twitter' else (
-            facebook_token if args.destination == 'facebook' else None)
+    token = twitter_token if args.media == 'twitter' else (
+            facebook_token if args.media == 'facebook' else None)
     assert token
 
     records = master.get_records(repeat)
@@ -55,10 +55,10 @@ def action(args):
         print('%s - Record \'%s\' publish started' % (datetime.now(), record.id))
 
         try:
-            if args.destination == 'twitter':
+            if args.media == 'twitter':
                 PosterHelper.post_twitter_status(record.get_twitter_info(), token)
 
-            if args.destination == 'facebook':
+            if args.media == 'facebook':
                 PosterHelper.post_facebook_record(record.get_facebook_info(), token)
 
             print('%s - Record published' % datetime.now())
