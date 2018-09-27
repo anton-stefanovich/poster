@@ -35,14 +35,22 @@ class PosterHelper:
     @staticmethod
     def get_facebook_token(page_id):
         access_token = None
-        user_access_token = 'EAAcD5OvwFogBANMvKKkZCtH0KOqsj0mZCaZBj2VAPEUlNWtVVgLZCtKlxni6vwi7MnusJEKdAcnVt7VDwQ1RZBDd9A7ZBMI5o0TmHO7YZClhgRbScB96YtIfMxSOK6OQwDKZCZBJ5Y2nKy1YqjdxHa2uQyKsju2vseiTWLJBLK5y1QQZDZD'
+        user_access_token = \
+            'EAAcD5OvwFogBANMvKKkZCtH0KOqsj0mZCaZBj2VAPEUl' \
+            'NWtVVgLZCtKlxni6vwi7MnusJEKdAcnVt7VDwQ1RZBDd9' \
+            'A7ZBMI5o0TmHO7YZClhgRbScB96YtIfMxSOK6OQwDKZCZ' \
+            'BJ5Y2nKy1YqjdxHa2uQyKsju2vseiTWLJBLK5y1QQZDZD'
 
-        graph = facebook.GraphAPI(user_access_token)
-        accounts = graph.get_object('me/accounts')
+        try:
+            graph = facebook.GraphAPI(user_access_token)
+            accounts = graph.get_object('me/accounts')
 
-        for page in accounts.get('data'):
-            if page['id'] == page_id:
-                access_token = page['access_token']
+            for page in accounts.get('data'):
+                if page['id'] == page_id:
+                    access_token = page['access_token']
+
+        except facebook.GraphAPIError as error:
+            print(error)
 
         return access_token
 
@@ -62,6 +70,7 @@ class PosterHelper:
             print('Attempt #%d' % (attempt + 1))
             try:
                 link = Shortener(shortener, api_key=token, bitly_token=token).short(url)
+                print('Link generated: %s' % link)
                 break
 
             except (TypeError, ValueError) as error:
@@ -117,9 +126,28 @@ class PosterHelper:
             info['status'], status_length - len(status_link_pattern),
             suffix=' ') + status_link
 
-        print('Posting twitter status: \'%s\'' % status_text)
-        PosterHelper.__twitter_api(token).\
-            PostUpdate(status_text, media=status_media, verify_status_length=False)
+        print('Posting twitter status:')
+        print('\tstatus: %s' % status_text)
+        print('\tmedia: %s' % status_media)
+
+        for attempt in range(PosterHelper.ATTEMPTS_TWITTER):
+            try:
+                print('Attempt #%d:' % (attempt + 1))
+                PosterHelper.__twitter_api(token).\
+                    PostUpdate(
+                        status_text,
+                        media=status_media,
+                        verify_status_length=False)
+
+                print('Status posted successfully')
+                break
+
+            except twitter.TwitterError as errors:
+                print('Twitter errors occur:')
+                for error in errors.message:
+                    print('\t%s (%d)' % (
+                        error.get('message'),
+                        error.get('code')))
 
     @staticmethod
     def post_facebook_record(info, token):
@@ -129,14 +157,18 @@ class PosterHelper:
             info.pop('message'), message_length,
             suffix=' ' + info.get('link'))
 
-        print('Posting facebook message: \'%s\'' % message)
+        print('Posting facebook message:')
+        print('\t%s' % message)
         for attempt in range(PosterHelper.ATTEMPTS_FACEBOOK):
             try:
+                print('Attempt #%d:' % (attempt + 1))
                 api.put_wall_post(message, info)
+                print('Message posted successfully')
                 break
 
-            except:
-                pass
+            except AssertionError as error:
+                print('Facebook error occur:')
+                print('\t%s' % error)
 
     @staticmethod
     def save_file(content, path, filename=None, binary=False):

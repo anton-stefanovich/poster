@@ -54,18 +54,13 @@ def action(args):
         record = records.pop()
         print('%s - Record \'%s\' publish started' % (datetime.now(), record.id))
 
-        try:
-            if args.media == 'twitter':
-                PosterHelper.post_twitter_status(record.get_twitter_info(), token)
+        if args.media == 'twitter':
+            PosterHelper.post_twitter_status(record.get_twitter_info(), token)
 
-            if args.media == 'facebook':
-                PosterHelper.post_facebook_record(record.get_facebook_info(), token)
+        if args.media == 'facebook':
+            PosterHelper.post_facebook_record(record.get_facebook_info(), token)
 
-            print('%s - Record published' % datetime.now())
-
-        except:
-            print('Unknown error occur')
-
+        # delay
         if len(records):
             print('Waiting %d minutes' % (delay / 60))
             time.sleep(delay)
