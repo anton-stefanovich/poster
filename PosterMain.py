@@ -1,6 +1,6 @@
 # system
-from datetime import datetime
 import argparse
+import random
 import time
 
 # custom
@@ -23,47 +23,59 @@ def main():
 
 
 def action(args):
-    repeat = args.repeat
-    delay = args.delay
-    master = {
+    assert args
+
+    master_class = {
         'test': TestMaster,
         'home': HomeMaster,
         'auto': AutoMaster,
     }.get(args.type, None)
-    assert master
 
-    # action = {
-    #     'twitter':  PosterHelper.post_twitter_status,
-    #     'facebook': PosterHelper.post_facebook_record,
-    # }.get(args.destination)
+    assert master_class
+    master = master_class()
 
-    twitter_token = PosterHelper.debug_twitter_token() \
-        if args.debug else master.get_twitter_token()
+    publisher = {
+        'twitter': {
+            'method': PosterHelper.post_twitter_status,
+            'token':  PosterHelper.debug_twitter_token
+            if args.debug else master.get_twitter_token, },
+        'facebook': {
+            'method': PosterHelper.post_facebook_record,
+            'token':  PosterHelper.debug_facebook_token
+            if args.debug else master.get_facebook_token, }
+    }.get(args.media, None)
 
-    facebook_token = PosterHelper.debug_facebook_token() \
-        if args.debug else master.get_facebook_token()
+    assert publisher
 
-    token = twitter_token if args.media == 'twitter' else (
-            facebook_token if args.media == 'facebook' else None)
-    assert token
+    records = master.get_records(args.repeat)
+    assert len(records)
 
-    records = master.get_records(repeat)
-    assert repeat == len(records)
+    publisher_method = publisher.get('method', None)
+    assert publisher_method
 
-    while len(records):
-        record = records.pop()
-        print('%s - Record \'%s\' publish started' % (datetime.now(), record.id))
+    publisher_token = publisher.get('token', None)
+    assert publisher_token
 
-        if args.media == 'twitter':
-            PosterHelper.post_twitter_status(record.get_twitter_info(), token)
+    repeats = list(range(args.repeat))
+    while len(records) and len(repeats):
+        index = random.choice(list(records.keys()))
+        record = records.pop(index)
 
-        if args.media == 'facebook':
-            PosterHelper.post_facebook_record(record.get_facebook_info(), token)
+        print("Record '{rec_id}' publish started".format(rec_id=record.id))
 
-        # delay
-        if len(records):
-            print('Waiting %d minutes' % (delay / 60))
-            time.sleep(delay)
+        if master.is_record_exists(index):
+            print('\t' 'Record was published earlier. Skipping it...')
+
+        else:
+            publisher_method(record, publisher_token())
+            master.insert_record(record.id)
+
+            repeats.pop()
+
+            # delay
+            if len(repeats):
+                print('Waiting %d minutes' % (args.delay / 60))
+                time.sleep(args.delay)
 
 
 if __name__ == "__main__":

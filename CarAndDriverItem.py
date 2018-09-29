@@ -3,19 +3,14 @@ from PosterHelper import *
 
 
 class CarAndDriverItem (PosterItem):
-    url = str()
-    title = str()
-    summary = str()
-    images = list()
 
     def __init__(self, wrapper_node):
-        self.id = CarAndDriverItem.get_id(wrapper_node)
-        self.url = CarAndDriverItem.get_url(wrapper_node)
-        self.title = CarAndDriverItem.get_title(wrapper_node)
-        self.summary = CarAndDriverItem.get_summary(wrapper_node)
+        self.url = self.get_url(wrapper_node)
+        self.title = self.get_title(wrapper_node)
+        self.summary = self.get_summary(wrapper_node)
+        self.image = self.get_image(wrapper_node)
 
-        post_node = wrapper_node.find_element_by_class_name('post')
-        self.images = [CarAndDriverItem.get_images(post_node)]
+        self.id = self.url
 
     @staticmethod
     def get_id(node):
@@ -23,43 +18,36 @@ class CarAndDriverItem (PosterItem):
 
     @staticmethod
     def get_title(node):
-        title_object = node.find_element_by_class_name('postTitle')
+        title_object = node.find_element_by_class_name('gtm-article-title')
         return title_object.text
 
     @staticmethod
     def get_url(node):
-        link_object = node.find_element_by_tag_name('a')
+        link_object = node.find_element_by_class_name('gtm-image-link')
         return link_object.get_attribute('href')
 
     @staticmethod
-    def get_images(node):
+    def get_image(node):
         image_object = node.find_element_by_tag_name('img')
-        return image_object.get_attribute('src')
+        image_url = image_object.get_attribute('src')
+        return PosterItem.trim_url(image_url) \
+            if image_url else image_url
 
     @staticmethod
     def get_summary(node):
-        summary = str()
-        post_text_objects = node.find_elements_by_tag_name('p')
-        for text_object in post_text_objects:
-            paragraph_text = text_object.text.strip()
-            summary += ' ' + paragraph_text
-            summary = summary.strip()
-
-        return summary
+        summary_object = node.find_element_by_class_name('text-nero')
+        return summary_object.text
 
     def get_twitter_info(self):
-        return {
-            'status': self.title + '. ' + self.summary,
-            'images': self.images[:4],
-            'link':   self.url,
-        }
+        return self.__get_info()
 
     def get_facebook_info(self):
-        picture = self.images.pop() \
-            if self.images else None
+        return self.__get_info()
 
+    def __get_info(self):
         return {
-            'message': self.summary,
-            'picture': picture,
-            'link': PosterHelper.get_short_link(self.url),
+            'image':   self.image,
+            'images':  [self.image],
+            'link':    self.url,
+            'text':    self.title + '. ' + self.summary,
         }

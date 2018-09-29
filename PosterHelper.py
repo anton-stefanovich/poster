@@ -34,12 +34,14 @@ class PosterHelper:
 
     @staticmethod
     def get_facebook_token(page_id):
+        # http://nodotcom.org/python-facebook-tutorial.html
+
         access_token = None
         user_access_token = \
-            'EAAcD5OvwFogBANMvKKkZCtH0KOqsj0mZCaZBj2VAPEUl' \
-            'NWtVVgLZCtKlxni6vwi7MnusJEKdAcnVt7VDwQ1RZBDd9' \
-            'A7ZBMI5o0TmHO7YZClhgRbScB96YtIfMxSOK6OQwDKZCZ' \
-            'BJ5Y2nKy1YqjdxHa2uQyKsju2vseiTWLJBLK5y1QQZDZD'
+            'EAAcD5OvwFogBAOGQKBzJZBGa33ScDoxazvPJ2bukt1FX' \
+            'z2EPo3fNA3PHx1B1ZBzcHQBlQzXyHpY6gcZArVlZCOGXH' \
+            'fijcGxexhcUVZASkIpntpYiP9YzU0D24zSKg7nw1wi5jZ' \
+            'CrGYYeK1WODF8ZCfwILtHAwtdRuhcT6uZC5vf3ZBwZDZD'
 
         try:
             graph = facebook.GraphAPI(user_access_token)
@@ -116,19 +118,20 @@ class PosterHelper:
         print(result)
 
     @staticmethod
-    def post_twitter_status(info, token):
+    def post_twitter_status(record, token):
         status_length = 265
         status_link_pattern = 'https://t.co/1234567890'
+        info = record.get_twitter_info()
 
         status_media = info['images'][:4]
         status_link = info['link']
         status_text = PosterHelper.crop_text(
-            info['status'], status_length - len(status_link_pattern),
+            info['text'], status_length - len(status_link_pattern),
             suffix=' ') + status_link
 
         print('Posting twitter status:')
-        print('\tstatus: %s' % status_text)
-        print('\tmedia: %s' % status_media)
+        print('\t' 'status: %s' % status_text)
+        print('\t' 'media: %s' % status_media)
 
         for attempt in range(PosterHelper.ATTEMPTS_TWITTER):
             try:
@@ -150,11 +153,16 @@ class PosterHelper:
                         error.get('code')))
 
     @staticmethod
-    def post_facebook_record(info, token):
+    def post_facebook_record(record, token):
         message_length = 256
         api = facebook.GraphAPI(token)
+        info = record.get_facebook_info()
+        facebook_data = {
+            'picture': info['image'],
+            'link': info['link'],
+        }
         message = PosterHelper.crop_text(
-            info.pop('message'), message_length,
+            info['text'], message_length,
             suffix=' ' + info.get('link'))
 
         print('Posting facebook message:')
@@ -162,7 +170,7 @@ class PosterHelper:
         for attempt in range(PosterHelper.ATTEMPTS_FACEBOOK):
             try:
                 print('Attempt #%d:' % (attempt + 1))
-                api.put_wall_post(message, info)
+                api.put_wall_post(message, facebook_data)
                 print('Message posted successfully')
                 break
 

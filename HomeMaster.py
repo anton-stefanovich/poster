@@ -54,7 +54,7 @@ class HomeMaster (PosterMaster):
         print('Getting %d home records' % count)
         driver = webdriver.Chrome()
 
-        records = list()
+        records = dict()
         search_size = len(HomeMaster.search_map)
         indexes = random.sample(
             HomeMaster.search_map.keys(),
@@ -69,33 +69,14 @@ class HomeMaster (PosterMaster):
             elements = driver.find_elements_by_class_name('card-flex-container')
             for element in elements:
                 favorite = element.find_element_by_class_name('favorite')
-                records.append({
-                    'url': HomeMaster.url_base + element.get_attribute('data-link'),
-                    'id': favorite.get_attribute('property-number'),
-                    'tags': {
-                        'major': random.sample(HomeMaster.tags_map.get('all'), 1).pop(),
-                        'minor': random.sample(HomeMaster.tags_map.get(
-                            HomeMaster.search_map.get(url_search_id)), 1).pop()}
-                })
+                records[favorite.get_attribute('property-number')] = HomeItem(
+                    favorite.get_attribute('property-number'),
+                    HomeMaster.url_base + element.get_attribute('data-link'),
+                    '#RealEstate' +
+                    ' ' + random.choice(HomeMaster.tags_map.get('all')) +
+                    ' ' + random.choice(HomeMaster.tags_map.get(
+                                            HomeMaster.search_map.get(url_search_id)))
+                )
 
-            print('%d houses was found' % len(elements))
-
-        print('Total elements: %d' % len(records))
-        indexes = random.sample(range(len(records)), count)
-        assert count == len(indexes)
-
-        homes = list()
-        print('Getting homes info')
-        for index in indexes:
-            record = records[index]
-            homes.append(
-                HomeItem(
-                    driver=driver,
-                    id=record.get('id'),
-                    url=record.get('url'),
-                    tags=record.get('tags')))
-
-        assert count == len(homes)
         driver.close()
-
-        return homes
+        return records

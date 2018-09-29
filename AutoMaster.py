@@ -4,13 +4,13 @@ from PosterMaster import PosterMaster
 from PosterHelper import PosterHelper
 from selenium import webdriver
 
-# system
-import random
-
 
 class AutoMaster (PosterMaster):
     url_caranddriver = 'https://blog.caranddriver.com/'
     url_motortrend = 'http://www.motortrend.com/auto-news/'
+
+    def __init__(self):
+        super().__init__()
 
     @staticmethod
     def get_twitter_token():
@@ -25,41 +25,26 @@ class AutoMaster (PosterMaster):
     def get_facebook_token():
         return PosterHelper.get_facebook_token('835257239940494')
 
-    @staticmethod
-    def get_records(count):
+    def get_records(self, count=0):
+        records = dict()
         driver = webdriver.Chrome()
 
-        records = list()
-        records += AutoMaster.get_motortrend_news(driver)
-        records += AutoMaster.get_caranddriver_news(driver)
+        records.update(AutoMaster.get_motortrend_news(driver))
+        records.update(AutoMaster.get_caranddriver_news(driver))
         driver.close()
 
-        indexes = random.sample(range(len(records)), count)
-        assert count == len(indexes)
-
-        news = list()
-        for index in indexes:
-            news.append(records[index])
-
-        return news
+        return records
 
     @staticmethod
     def get_caranddriver_news(driver):
         PosterHelper.get_ajax_page(driver, AutoMaster.url_caranddriver)
-        post_wrapper_objects = driver.find_elements_by_class_name('postWrapper')
+        post_wrapper_objects = driver.find_elements_by_class_name('cd-article-summary')
 
-        # indexes = random.sample(range(len(post_wrapper_objects)), count)
-        # assert count == len(indexes)
-        records = list()
-
-        # for index in indexes:
-        #     records.append(CarAndDriverItem(
-        #         post_wrapper_objects[index]))
-
+        records = dict()
         for post_wrapper_object in post_wrapper_objects:
-            records.append(CarAndDriverItem(post_wrapper_object))
-
-        # assert count == len(records)
+            record = CarAndDriverItem(post_wrapper_object)
+            if record.image:  # ToDo Upload all content!
+                records[record.id] = record
 
         return records
 
@@ -68,13 +53,12 @@ class AutoMaster (PosterMaster):
         PosterHelper.get_ajax_page(driver, AutoMaster.url_motortrend)
         post_wrapper_objects = driver.find_elements_by_class_name('entry-article')
 
-        records = list()
+        records = dict()
         for post_wrapper_object in post_wrapper_objects:
             topic_elements = post_wrapper_object.find_elements_by_css_selector('.entry-topic')
-            if len(topic_elements) and \
-                    topic_elements.pop().text.upper().count('NEWS'):
+            if len(topic_elements) and topic_elements.pop().text.upper().count('NEWS'):
                 record = MotorTrendItem(post_wrapper_object)
                 if len(record.title):
-                    records.append(record)
+                    records[record.id] = record
 
         return records

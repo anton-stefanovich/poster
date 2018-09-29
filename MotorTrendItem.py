@@ -9,10 +9,10 @@ class MotorTrendItem (PosterItem):
 
     def __init__(self, wrapper_node):
         if not MotorTrendItem.is_sponsored_content(wrapper_node):
-            self.id = MotorTrendItem.get_id(wrapper_node)
-            self.url = MotorTrendItem.get_url(wrapper_node)
-            self.title = MotorTrendItem.get_title(wrapper_node)
-            self.images = [MotorTrendItem.get_images(wrapper_node)]
+            self.id = self.get_id(wrapper_node)
+            self.url = self.get_url(wrapper_node)
+            self.title = self.get_title(wrapper_node)
+            self.image = self.get_image(wrapper_node)
 
     @staticmethod
     def is_sponsored_content(node):
@@ -33,7 +33,7 @@ class MotorTrendItem (PosterItem):
         return post_link_object.get_attribute('data-href')
 
     @staticmethod
-    def get_images(node):
+    def get_image(node):
         image_object = node.find_element_by_class_name('wp-post-image')
         image_src = image_object.get_attribute('data-base')
         if image_src and not len(image_src):
@@ -53,18 +53,15 @@ class MotorTrendItem (PosterItem):
         return summary
 
     def get_twitter_info(self):
-        return {
-            'status': self.title,
-            'images': self.images[:4],
-            'link':   self.url,
-        }
+        return self.__get_info()
 
     def get_facebook_info(self):
-        picture = self.images.pop() \
-            if self.images else None
+        return self.__get_info()
 
+    def __get_info(self):
         return {
-            'message': self.title,
-            'picture': picture,
-            'link': PosterHelper.get_short_link(self.url),
+            'image':   self.image,
+            'images':  [self.image],
+            'link':    self.url,
+            'text':    self.title,
         }

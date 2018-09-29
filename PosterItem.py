@@ -1,8 +1,11 @@
 from PosterHelper import PosterHelper
+from abc import ABC, abstractmethod
+import os
 
 
-class PosterItem:
+class PosterItem(ABC):
     id = None
+    __MEDIA_DIR__ = 'media'
 
     @staticmethod
     def save_images(images, path):
@@ -14,27 +17,26 @@ class PosterItem:
 
         return local_images
 
-    @staticmethod
-    def save_image(link, name, path):
+    def save_image(self, link, name):
         name += link[link.rfind('.'):]
+        image_dir = self.__MEDIA_DIR__ + os.sep + self.id
         image_path = PosterHelper.save_file(
                 PosterHelper.download_file(link),
-                path, name, binary=True)
+                image_dir, name, binary=True)
 
         PosterHelper.normalize_image(image_path)
 
         return image_path
 
-    def get_twitter_info(self):
-        return {
-            'status':  None,
-            'images':  None,
-            'link':    None,
-        }
+    @staticmethod
+    def trim_url(url):
+        crop_at = url.find('?')
+        return url[:crop_at] if crop_at > 0 else url
 
+    @abstractmethod
     def get_facebook_info(self):
-        return {
-            'message': None,
-            'picture': None,
-            'link':    None,
-        }
+        pass
+
+    @abstractmethod
+    def get_twitter_info(self):
+        pass
