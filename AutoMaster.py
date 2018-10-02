@@ -1,3 +1,7 @@
+# system
+import random
+
+# custom
 from CarAndDriverItem import CarAndDriverItem
 from MotorTrendItem import MotorTrendItem
 from PosterMaster import PosterMaster
@@ -25,12 +29,23 @@ class AutoMaster (PosterMaster):
     def get_facebook_token():
         return PosterHelper.get_facebook_token('835257239940494')
 
-    def get_records(self, count=0):
-        records = dict()
+    @staticmethod
+    def get_records(count):
+        sources = [
+            AutoMaster.get_motortrend_news,
+            AutoMaster.get_caranddriver_news,
+        ]
+
+        while len(sources) > count:
+            sources.remove(
+                random.choice(sources))
+
         driver = webdriver.Chrome()
 
-        records.update(AutoMaster.get_motortrend_news(driver))
-        records.update(AutoMaster.get_caranddriver_news(driver))
+        records = dict()
+        for source in sources:
+            records.update(source(driver))
+
         driver.close()
 
         return records
@@ -43,8 +58,7 @@ class AutoMaster (PosterMaster):
         records = dict()
         for post_wrapper_object in post_wrapper_objects:
             record = CarAndDriverItem(post_wrapper_object)
-            if record.image:  # ToDo Upload all content!
-                records[record.id] = record
+            records[record.id] = record
 
         return records
 

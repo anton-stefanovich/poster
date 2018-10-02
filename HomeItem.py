@@ -1,6 +1,3 @@
-# system
-import random
-
 # custom
 from PosterHelper import PosterHelper
 from PosterItem import PosterItem
@@ -8,8 +5,8 @@ from selenium import webdriver
 
 
 class HomeItem (PosterItem):
-    def __init__(self, id, url, tags):
-        self.id = id
+    def __init__(self, item_id, url, tags):
+        self.id = item_id
         self.url = url
         self.tags = tags
 
@@ -27,7 +24,7 @@ class HomeItem (PosterItem):
             image_link = image_src if image_src else image_lazy
 
             if 'f_' in image_link:
-                images[image_id] = PosterItem.trim_url(image_link)
+                images[image_id] = PosterHelper.crop_url(image_link)
 
         return images
 
@@ -84,6 +81,5 @@ class HomeItem (PosterItem):
         return {
             'link': self.url,
             'text': message,
-            'image':
-                self.images[0] if len(self.images) else None,
+            'images': self.images,
         }

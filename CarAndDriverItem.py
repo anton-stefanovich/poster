@@ -1,20 +1,16 @@
 from PosterItem import *
-from PosterHelper import *
+from selenium import webdriver
 
 
 class CarAndDriverItem (PosterItem):
 
     def __init__(self, wrapper_node):
         self.url = self.get_url(wrapper_node)
-        self.title = self.get_title(wrapper_node)
-        self.summary = self.get_summary(wrapper_node)
-        self.image = self.get_image(wrapper_node)
-
         self.id = self.url
 
-    @staticmethod
-    def get_id(node):
-        return node.get_attribute('id')
+        self.text = self.build_summary(
+            self.get_summary(wrapper_node),
+            title=self.get_title(wrapper_node))
 
     @staticmethod
     def get_title(node):
@@ -27,16 +23,23 @@ class CarAndDriverItem (PosterItem):
         return link_object.get_attribute('href')
 
     @staticmethod
-    def get_image(node):
-        image_object = node.find_element_by_tag_name('img')
-        image_url = image_object.get_attribute('src')
-        return PosterItem.trim_url(image_url) \
-            if image_url else image_url
-
-    @staticmethod
     def get_summary(node):
         summary_object = node.find_element_by_class_name('text-nero')
         return summary_object.text
+
+    @staticmethod
+    def get_images(page):
+        title_image_object = page.find_element_by_css_selector('div.hover-filter a.gtm-image-link img')
+        article_image_objects = page.find_elements_by_css_selector('span.inline-image img')
+
+        images = [
+            PosterHelper.crop_url(title_image_object.get_attribute('src'))]
+
+        for image_object in article_image_objects:
+            images.append(
+                PosterHelper.crop_url(image_object.get_attribute('src')))
+
+        return images
 
     def get_twitter_info(self):
         return self.__get_info()
@@ -45,9 +48,14 @@ class CarAndDriverItem (PosterItem):
         return self.__get_info()
 
     def __get_info(self):
+        driver = webdriver.Chrome()
+        PosterHelper.get_ajax_page(driver, self.url)
+        body_object = driver.find_element_by_tag_name('body')
+        self.images = self.get_images(body_object)
+        driver.close()
+
         return {
-            'image':   self.image,
-            'images':  [self.image],
+            'images':  self.images,
             'link':    self.url,
-            'text':    self.title + '. ' + self.summary,
+            'text':    self.text,
         }

@@ -60,7 +60,6 @@ class MotorTrendItem (PosterItem):
 
     def __get_info(self):
         return {
-            'image':   self.image,
             'images':  [self.image],
             'link':    self.url,
             'text':    self.title,

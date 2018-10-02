@@ -83,9 +83,6 @@ class PosterHelper:
                     exceptions.UnknownShortenerException) as error:
                 print('Shortener exception: %s' % error)
 
-            except:
-                print('Unknown error occur')
-
         return link
 
     @staticmethod
@@ -103,19 +100,6 @@ class PosterHelper:
             consumer_secret=token.get('consumer_secret'),
             access_token_key=token.get('access_key'),
             access_token_secret=token.get('access_secret'))
-
-    @staticmethod
-    def subscribe_twitter():
-        api = PosterHelper.__twitter_api(
-            PosterHelper.debug_twitter_token())
-
-        # result = api.GetRetweetsOfMe()
-        # result = api.GetRetweeters()
-        # result = api.GetHomeTimeline()
-        result = api.GetFavorites('MetroMinistries')
-        # result = api.
-
-        print(result)
 
     @staticmethod
     def post_twitter_status(record, token):
@@ -157,10 +141,16 @@ class PosterHelper:
         message_length = 256
         api = facebook.GraphAPI(token)
         info = record.get_facebook_info()
+
+        images = info['images']
+        image = images[0]\
+            if images and len(images) else None
+
         facebook_data = {
-            'picture': info['image'],
+            'picture': image,
             'link': info['link'],
         }
+
         message = PosterHelper.crop_text(
             info['text'], message_length,
             suffix=' ' + info.get('link'))
@@ -191,6 +181,11 @@ class PosterHelper:
         file.close()
 
         return path
+
+    @staticmethod
+    def crop_url(url):
+        crop_at = url.find('?')
+        return url[:crop_at] if crop_at > 0 else url
 
     @staticmethod
     def download_file(url):

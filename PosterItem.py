@@ -29,9 +29,17 @@ class PosterItem(ABC):
         return image_path
 
     @staticmethod
-    def trim_url(url):
-        crop_at = url.find('?')
-        return url[:crop_at] if crop_at > 0 else url
+    def build_summary(summary, title=str()):
+        if title and len(title):
+            connector = '. '
+            for ch in ['.', ',', '!', '?', ':', ':']:
+                if title.endswith(ch):
+                    connector = ' '
+                    break
+
+            summary = title + connector + summary
+
+        return summary
 
     @abstractmethod
     def get_facebook_info(self):
