@@ -6,12 +6,9 @@ from CarAndDriverItem import CarAndDriverItem
 from MotorTrendItem import MotorTrendItem
 from PosterMaster import PosterMaster
 from PosterHelper import PosterHelper
-from selenium import webdriver
 
 
 class AutoMaster (PosterMaster):
-    url_caranddriver = 'https://blog.caranddriver.com/'
-    url_motortrend = 'http://www.motortrend.com/auto-news/'
 
     def __init__(self):
         super().__init__()
@@ -31,48 +28,15 @@ class AutoMaster (PosterMaster):
 
     @staticmethod
     def get_records(count):
+        records = dict()
         sources = [
-            AutoMaster.get_motortrend_news,
-            AutoMaster.get_caranddriver_news,
+            MotorTrendItem,
+            CarAndDriverItem,
         ]
 
-        while len(sources) > count:
-            sources.remove(
-                random.choice(sources))
-
-        driver = webdriver.Chrome()
-
-        records = dict()
-        for source in sources:
-            records.update(source(driver))
-
-        driver.close()
-
-        return records
-
-    @staticmethod
-    def get_caranddriver_news(driver):
-        PosterHelper.get_ajax_page(driver, AutoMaster.url_caranddriver)
-        post_wrapper_objects = driver.find_elements_by_class_name('cd-article-summary')
-
-        records = dict()
-        for post_wrapper_object in post_wrapper_objects:
-            record = CarAndDriverItem(post_wrapper_object)
-            records[record.id] = record
-
-        return records
-
-    @staticmethod
-    def get_motortrend_news(driver):
-        PosterHelper.get_ajax_page(driver, AutoMaster.url_motortrend)
-        post_wrapper_objects = driver.find_elements_by_class_name('entry-article')
-
-        records = dict()
-        for post_wrapper_object in post_wrapper_objects:
-            topic_elements = post_wrapper_object.find_elements_by_css_selector('.entry-topic')
-            if len(topic_elements) and topic_elements.pop().text.upper().count('NEWS'):
-                record = MotorTrendItem(post_wrapper_object)
-                if len(record.title):
-                    records[record.id] = record
+        if count:
+            for source in sources:
+                records.update(
+                    source.get_records())
 
         return records

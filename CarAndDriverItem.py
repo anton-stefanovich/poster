@@ -1,43 +1,70 @@
 from PosterItem import *
-from selenium import webdriver
+
+import requests
+from bs4 import BeautifulSoup
 
 
 class CarAndDriverItem (PosterItem):
+    __URL_BASE__ = 'https://caranddriver.com'
+    __URL_LIST__ = 'https://blog.caranddriver.com'
+    __URL_IMAGE_BASE__ = 'https://hips.hearstapps.com/'
 
-    def __init__(self, wrapper_node):
-        self.url = self.get_url(wrapper_node)
-        self.id = self.url
-
-        self.text = self.build_summary(
-            self.get_summary(wrapper_node),
-            title=self.get_title(wrapper_node))
-
-    @staticmethod
-    def get_title(node):
-        title_object = node.find_element_by_class_name('gtm-article-title')
-        return title_object.text
+    def __init__(self, url, text):
+        self.url = url
+        self.text = text
 
     @staticmethod
-    def get_url(node):
-        link_object = node.find_element_by_class_name('gtm-image-link')
-        return link_object.get_attribute('href')
+    def get_records():
+        records = dict()
+
+        page = requests.get(CarAndDriverItem.__URL_LIST__)
+        soup = BeautifulSoup(page.text, 'html.parser')
+
+        articles = soup('cd-article-summary')
+        for article in articles:
+            url_raw = CarAndDriverItem.get_url(article)
+            url_full = CarAndDriverItem.__URL_BASE__ + url_raw
+
+            text = CarAndDriverItem.build_summary(
+                summary=CarAndDriverItem.get_summary(article),
+                title=CarAndDriverItem.get_title(article))
+
+            records[url_raw] = CarAndDriverItem(url_full, text)
+
+        return records
 
     @staticmethod
-    def get_summary(node):
-        summary_object = node.find_element_by_class_name('text-nero')
-        return summary_object.text
+    def get_title(wrapper):
+        tag = wrapper.find(class_='gtm-article-title')
+        return tag.string
 
     @staticmethod
-    def get_images(page):
-        title_image_object = page.find_element_by_css_selector('div.hover-filter a.gtm-image-link img')
-        article_image_objects = page.find_elements_by_css_selector('span.inline-image img')
+    def get_summary(wrapper):
+        tag = wrapper.find(class_='text-nero')
+        return tag.string
+
+    @staticmethod
+    def get_url(wrapper):
+        tag = wrapper.find('a')
+        return tag['href'] if tag else None
+
+    @staticmethod
+    def get_images(wrapper):
+        title_image_tag = wrapper.select_one(
+            'div.hover-filter a.gtm-image-link img')
+
+        article_image_tags = wrapper.select(
+            'span.inline-image img')
 
         images = [
-            PosterHelper.crop_url(title_image_object.get_attribute('src'))]
+            PosterHelper.crop_url(
+                title_image_tag['src'])]
 
-        for image_object in article_image_objects:
+        for image_tag in article_image_tags:
             images.append(
-                PosterHelper.crop_url(image_object.get_attribute('src')))
+                PosterHelper.crop_url(
+                    CarAndDriverItem.__URL_IMAGE_BASE__ +
+                    image_tag['data-src']))
 
         return images
 
@@ -48,11 +75,9 @@ class CarAndDriverItem (PosterItem):
         return self.__get_info()
 
     def __get_info(self):
-        driver = webdriver.Chrome()
-        PosterHelper.get_ajax_page(driver, self.url)
-        body_object = driver.find_element_by_tag_name('body')
-        self.images = self.get_images(body_object)
-        driver.close()
+        page = requests.get(self.url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+        self.images = self.get_images(soup)
 
         return {
             'images':  self.images,

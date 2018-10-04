@@ -1,56 +1,80 @@
 from PosterItem import *
 from PosterHelper import *
 
+import requests
+from bs4 import BeautifulSoup
+
 
 class MotorTrendItem (PosterItem):
-    url = str()
-    title = str()
-    images = list()
+    __URL_BASE__ = 'https://www.motortrend.com'
+    __URL_LIST__ = 'https://www.motortrend.com/auto-news/'
 
-    def __init__(self, wrapper_node):
-        if not MotorTrendItem.is_sponsored_content(wrapper_node):
-            self.id = self.get_id(wrapper_node)
-            self.url = self.get_url(wrapper_node)
-            self.title = self.get_title(wrapper_node)
-            self.image = self.get_image(wrapper_node)
+    def __init__(self, url):
+        # self.id = self.get_id(article)
+        self.url = url
+        # self.title = self.get_title(article)
+        # self.image = self.get_image(article)
+
+    @staticmethod
+    def get_records():
+        page = requests.get(MotorTrendItem.__URL_LIST__)
+        soup = BeautifulSoup(page.text, 'html.parser')
+        articles = soup.select('.entry-article')
+
+        records = dict()
+        for article in articles:
+            article_id = MotorTrendItem.get_id(article)
+            article_url = MotorTrendItem.get_url(article)
+            records[article_id] = MotorTrendItem(article_url)
+
+            # if len(topic_elements) and topic_elements.pop().text.upper().count('NEWS'):
+            #     record = MotorTrendItem(post_wrapper_object)
+            #     if len(record.title):
+            #         records[record.id] = record
+
+        return records
 
     @staticmethod
     def is_sponsored_content(node):
         return len(node.find_elements_by_class_name('prx-promoted'))
 
     @staticmethod
-    def get_id(node):
-        return node.get_attribute('id')
+    def get_id(article):
+        return article['id']
 
     @staticmethod
-    def get_title(node):
-        title_object = node.find_element_by_class_name('entry-title')
-        return title_object.text
+    def get_url(article):
+        return article.select_one('.link')['data-href']
 
     @staticmethod
-    def get_url(node):
-        post_link_object = node.find_element_by_class_name('link')
-        return post_link_object.get_attribute('data-href')
+    def get_title(article):
+        tag = article.select_one('div.entry-header h1.entry-title.-title')
+        return tag.get_text().strip()
 
     @staticmethod
-    def get_image(node):
-        image_object = node.find_element_by_class_name('wp-post-image')
-        image_src = image_object.get_attribute('data-base')
-        if image_src and not len(image_src):
-            image_src = image_object.get_attribute('src')
-
-        return image_src
+    def get_summary(article):
+        tag = article.select_one(
+            'div.entry-header span.entry-title.-subtitle')
+        return tag.get_text().strip()
 
     @staticmethod
-    def get_summary(node):
-        summary = str()
-        post_text_objects = node.find_elements_by_tag_name('p')
-        for text_object in post_text_objects:
-            paragraph_text = text_object.text.strip()
-            summary += ' ' + paragraph_text
-            summary = summary.strip()
+    def get_images(article):
+        title_image_tag = article.select_one(
+            'div.featured-image div.image')
 
-        return summary
+        article_image_tags = article.select(
+            'figure.imagecontainer img')
+
+        images = [
+            PosterHelper.crop_url(
+                title_image_tag['data-src'])]
+
+        for image_tag in article_image_tags:
+            images.append(
+                PosterHelper.crop_url(
+                    image_tag['data-src']))
+
+        return images
 
     def get_twitter_info(self):
         return self.__get_info()
@@ -59,8 +83,16 @@ class MotorTrendItem (PosterItem):
         return self.__get_info()
 
     def __get_info(self):
+        page = requests.get(self.url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+
+        images = self.get_images(soup)
+        text = self.build_summary(
+            title=MotorTrendItem.get_title(soup),
+            summary=MotorTrendItem.get_summary(soup))
+
         return {
-            'images':  [self.image],
             'link':    self.url,
-            'text':    self.title,
+            'images':  images,
+            'text':    text,
         }

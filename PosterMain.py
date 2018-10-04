@@ -58,17 +58,17 @@ def action(args):
 
     repeats = list(range(args.repeat))
     while len(records) and len(repeats):
-        index = random.choice(list(records.keys()))
-        record = records.pop(index)
+        rec_id = random.choice(list(records.keys()))
+        record = records.pop(rec_id)
 
-        print("Record '{rec_id}' publish started".format(rec_id=record.id))
+        print("Record '{rec_id}' publish started".format(rec_id=rec_id))
 
-        if master.is_record_exists(index):
+        if master.is_record_exists(rec_id):
             print('\t' 'Record was published earlier. Skipping it...')
 
         else:
             publisher_method(record, publisher_token())
-            master.insert_record(record.id)
+            master.insert_record(rec_id)
 
             repeats.pop()
 
