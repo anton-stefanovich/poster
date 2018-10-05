@@ -7,6 +7,17 @@ class PosterItem(ABC):
     id = None
     __MEDIA_DIR__ = 'media'
 
+    def __init__(self, url):
+        self._url = url
+
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, url):
+        self._url = url
+
     @staticmethod
     def save_images(images, path):
         local_images = list()
@@ -29,17 +40,19 @@ class PosterItem(ABC):
         return image_path
 
     @staticmethod
-    def build_summary(summary, title=str()):
-        if title and len(title):
-            connector = '. '
+    def build_summary(strings):
+        summary = str()
+
+        for string in strings:
+            connector = u'. '
             for ch in ['.', ',', '!', '?', ':', ':']:
-                if title.endswith(ch):
-                    connector = ' '
+                if summary.endswith(ch):
+                    connector = u' '
                     break
 
-            summary = title + connector + summary
+            summary += string + connector
 
-        return summary
+        return summary.strip()
 
     @abstractmethod
     def get_facebook_info(self):

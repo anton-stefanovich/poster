@@ -10,10 +10,7 @@ class MotorTrendItem (PosterItem):
     __URL_LIST__ = 'https://www.motortrend.com/auto-news/'
 
     def __init__(self, url):
-        # self.id = self.get_id(article)
-        self.url = url
-        # self.title = self.get_title(article)
-        # self.image = self.get_image(article)
+        super().__init__(url)
 
     @staticmethod
     def get_records():
@@ -87,9 +84,10 @@ class MotorTrendItem (PosterItem):
         soup = BeautifulSoup(page.text, 'html.parser')
 
         images = self.get_images(soup)
-        text = self.build_summary(
-            title=MotorTrendItem.get_title(soup),
-            summary=MotorTrendItem.get_summary(soup))
+        text = self.build_summary([
+            MotorTrendItem.get_title(soup),
+            MotorTrendItem.get_summary(soup)
+        ])
 
         return {
             'link':    self.url,

@@ -9,9 +9,8 @@ class CarAndDriverItem (PosterItem):
     __URL_LIST__ = 'https://blog.caranddriver.com'
     __URL_IMAGE_BASE__ = 'https://hips.hearstapps.com/'
 
-    def __init__(self, url, text):
-        self.url = url
-        self.text = text
+    def __init__(self, url):
+        super().__init__(url)
 
     @staticmethod
     def get_records():
@@ -24,24 +23,19 @@ class CarAndDriverItem (PosterItem):
         for article in articles:
             url_raw = CarAndDriverItem.get_url(article)
             url_full = CarAndDriverItem.__URL_BASE__ + url_raw
-
-            text = CarAndDriverItem.build_summary(
-                summary=CarAndDriverItem.get_summary(article),
-                title=CarAndDriverItem.get_title(article))
-
-            records[url_raw] = CarAndDriverItem(url_full, text)
+            records[url_raw] = CarAndDriverItem(url_full)
 
         return records
 
     @staticmethod
     def get_title(wrapper):
-        tag = wrapper.find(class_='gtm-article-title')
-        return tag.string
+        tag = wrapper.select_one('div.max-width-site h1')
+        return tag.string.strip()
 
     @staticmethod
     def get_summary(wrapper):
-        tag = wrapper.find(class_='text-nero')
-        return tag.string
+        tag = wrapper.select_one('div.max-width-site h3')
+        return tag.string.strip()
 
     @staticmethod
     def get_url(wrapper):
@@ -50,21 +44,22 @@ class CarAndDriverItem (PosterItem):
 
     @staticmethod
     def get_images(wrapper):
-        title_image_tag = wrapper.select_one(
-            'div.hover-filter a.gtm-image-link img')
+        title_image_sources = [
+            'div.hover-filter a.gtm-image-link img',
+            'picture.gtm-hips-picture img',
+            'span.inline-image img',
+        ]
 
-        article_image_tags = wrapper.select(
-            'span.inline-image img')
+        images = list()
+        for source in title_image_sources:
+            tags = wrapper.select(source)
+            for tag in tags:
+                src_preload = tag.get('src')
+                src_on_show = tag.get('data-src')
 
-        images = [
-            PosterHelper.crop_url(
-                title_image_tag['src'])]
-
-        for image_tag in article_image_tags:
-            images.append(
-                PosterHelper.crop_url(
-                    CarAndDriverItem.__URL_IMAGE_BASE__ +
-                    image_tag['data-src']))
+                images.append(
+                    PosterHelper.crop_url(
+                        src_on_show or src_preload))
 
         return images
 
@@ -76,11 +71,18 @@ class CarAndDriverItem (PosterItem):
 
     def __get_info(self):
         page = requests.get(self.url)
+        page.encoding = 'UTF-8'
         soup = BeautifulSoup(page.text, 'html.parser')
-        self.images = self.get_images(soup)
+        article = soup.select_one('div.article-col-width')
+
+        images = self.get_images(article)
+        text = CarAndDriverItem.build_summary([
+            CarAndDriverItem.get_title(soup),
+            CarAndDriverItem.get_summary(soup),
+        ])
 
         return {
-            'images':  self.images,
             'link':    self.url,
-            'text':    self.text,
+            'images':  images,
+            'text':    text,
         }
