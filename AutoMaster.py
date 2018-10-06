@@ -27,16 +27,15 @@ class AutoMaster (PosterMaster):
         return PosterHelper.get_facebook_token('835257239940494')
 
     @staticmethod
-    def get_records(count):
+    def get_records():
         records = dict()
         sources = [
             MotorTrendItem,
             CarAndDriverItem,
         ]
 
-        if count:
-            for source in sources:
-                records.update(
-                    source.get_records())
+        for source in sources:
+            records.update(
+                source.get_records())
 
         return records

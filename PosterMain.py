@@ -47,7 +47,7 @@ def action(args):
 
     assert publisher
 
-    records = master.get_records(args.repeat)
+    records = master.get_records()
     assert len(records)
 
     publisher_method = publisher.get('method', None)
