@@ -1,0 +1,16 @@
+# web parser
+beautifulsoup4
+
+# advanced requests
+requests
+hyper
+
+# social media
+facebook-sdk
+python-twitter
+
+# short link generator
+pyshorteners
+
+# image manager
+pillow

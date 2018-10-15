@@ -3,40 +3,16 @@ from PosterMaster import *
 from PosterHelper import *
 
 import json
-import requests
+import hyper
 
 import random
 
 
 class HomeMaster (PosterMaster):
-    url_base = 'http://homeoftampabay.kwrealty.com'
-    url_search = '/ajax/listing/consumermapsearch/'
-
-    search_map = {
-        '17835369': 'expensive',
-        '17749077': 'expensive',
-        '17827006': 'expensive',
-        '17827014': 'medium',
-        '17827017': 'medium',
-        '17827030': 'medium',
-        '17827032': 'medium',
-        '17827033': 'medium',
-        '17827034': 'cheap',
-        '17835346': 'cheap',
-    }
-
-    tags_map = {
-        'all': [
-            '#HomeBuying', '#HouseHunting', '#FirstHome', '#HomeSale', '#HomesForSale', '#Property', '#JustListed',
-            '#Properties', '#Investment', '#Home', '#Housing', '#Listing', '#Mortgage', '#EmptyNest'],
-        'cheap': [
-            '#FirstTimeHomeBuyer', '#DIY', '#DIYspecial', '#FixerUpper', '#Flipper', '#FlipHouse', '#TLCneeded',
-            '#DesignerSpecial', '#FirstHome', '#PricedToGo', '#BargainHunt', '#Bargain', '#MostBangForYourBuck'],
-        'medium': [
-            '#GreatValue', '#RightPrice', '#GreatDeal', '#DoneRight', '#PerfectPrice', '#Renovated'],
-        'expensive': [
-            '#DreamHouse', '#LuxuryRealEstate', '#LuxuryLiving', '#MillionDollarListing']
-    }
+    request_method = 'POST'
+    request_scheme = 'https'
+    request_base = 'homeoftampabay.kwrealty.com'
+    request_search = '/ajax/listing/consumermapsearch/'
 
     @staticmethod
     def get_twitter_token():
@@ -53,62 +29,58 @@ class HomeMaster (PosterMaster):
 
     @staticmethod
     def get_records():
-        request_url = \
-            HomeMaster.url_base + \
-            HomeMaster.url_search
+        connection = hyper.HTTP20Connection(HomeMaster.request_base)
 
         request_body = HomeMaster.__get_request_body(
             price=random.choice(HomeMaster.__get_price_range()))
 
-        request_headers = HomeMaster.__get_request_headers(
-            size=len(request_body))
+        request_headers = HomeMaster.__get_request_headers()
 
-        response = requests.post(
-            url=request_url,
+        stream_id = connection.request(
+            method='POST',
+            url=HomeMaster.request_search,
             headers=request_headers,
-            data=request_body)
+            body=request_body)
+        response = connection.get_response(stream_id)
 
-        response_json = json.loads(response.text)
+        response_data = response.read()
+        response_text = response_data.decode()
+        response_json = json.loads(response_text)
         house_cards = response_json['payload']['listings']
 
         records = dict()
         for house in house_cards:
             house_id = house['id']
             house_url = house['detailsUrl']
-            house_price = house['price']
 
-            house_tags = HomeMaster.__get_house_tags(house_price)
             records[house_id] = \
-                HomeItem(house_id, HomeMaster.url_base + house_url, house_tags)
+                HomeItem(
+                    HomeMaster.request_scheme + '://' +
+                    HomeMaster.request_base + house_url)
 
         return records
 
     @staticmethod
-    def __get_request_headers(size: int):
+    def __get_request_headers():
         return {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Length': str(size),
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            # 'Host': 'homeoftampabay.kwrealty.com',
-            # 'Connection': 'keep-alive',
-            # 'Accept': '*/*',
-            # 'Origin': 'http://homeoftampabay.kwrealty.com',
-            # 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-            #               'Ubuntu Chromium/69.0.3497.81 Chrome/69.0.3497.81 Safari/537.36',
-            # 'Referer': 'http://homeoftampabay.kwrealty.com/map/',
-            # 'Accept-Encoding': 'gzip, deflate',
-            # 'Accept-Language': 'en-US,en;q=0.9,ru-RU;q=0.8,ru;q=0.7',
+            ':method': HomeMaster.request_method,
+            ':scheme': HomeMaster.request_scheme,
+            ':authority': HomeMaster.request_base,
+            ':path': HomeMaster.request_search,
+            'accept': '*/*',
+            'x-requested-with': 'XMLHttpRequest',
+            'accept-encoding': 'gzip, deflate, br',
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
         }
 
     @staticmethod
     def __get_request_body(price: int):
-        price_max = int(price * 1.1)
-        price_min = int(price * 0.9)
+        price_max = int(price * 1.25)
+        price_min = int(price * 0.75)
 
         return \
             '&lulat=28.3&lulong=-82.8' \
             '&rllat=27.8&rllong=-82.2' \
-            '&sort=mlsupdatedate+desc' \
             '&favoritesonly=0' \
             '&maxprice={price_max}' \
             '&minprice={price_min}' \
@@ -121,6 +93,7 @@ class HomeMaster (PosterMaster):
             '&stories=0'.format(
                 price_min=price_min,
                 price_max=price_max)
+        # '&sort=mlsupdatedate+desc' \
         # '&isCommercial=' \
         # '&moreareas=' \
         # 'areas=' \
@@ -136,34 +109,10 @@ class HomeMaster (PosterMaster):
         # '&subdivision=' \
 
     @staticmethod
-    def __get_house_tags(price: str):
-        price = int(
-            price
-            .strip('$')
-            .replace(',', str()))
-
-        key_all = 'all'
-        key_price = 'expensive' \
-            if int(price) > 500000 else 'medium' \
-            if int(price) > 200000 else 'cheap'
-
-        return \
-            '#RealEstate' + \
-            ' ' + random.choice(HomeMaster.tags_map.get(key_all)) + \
-            ' ' + random.choice(HomeMaster.tags_map.get(key_price))
-
-    @staticmethod
     def __get_price_range():
-        basic = pow(10, 6)
+        basic = pow(10, 6)  # basic is '$1,000,000'
         return [
-            basic * 0.15,
-            basic * 0.20,
-            basic * 0.25,
-            basic * 0.30,
-            basic * 0.35,
-            basic * 0.40,
-            basic * 0.50,
-            basic * 0.65,
-            basic * 1.00,
-            basic * 2.00,
+            basic * 0.15, basic * 0.20, basic * 0.25, basic * 0.30,  # cheap
+            basic * 0.35, basic * 0.40, basic * 0.50, basic * 0.75,  # average
+            basic * 1.00, basic * 1.33, basic * 1.67, basic * 2.00,  # expensive
         ]

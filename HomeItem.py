@@ -1,85 +1,112 @@
 # custom
 from PosterHelper import PosterHelper
 from PosterItem import PosterItem
-from selenium import webdriver
+
+# libs
+import requests
+from bs4 import BeautifulSoup
+
+# system
+from random import choice
 
 
 class HomeItem (PosterItem):
-    def __init__(self, item_id, url, tags):
-        self.id = item_id
+    tags_map = {
+        'all': [
+            '#HomeBuying', '#HouseHunting', '#FirstHome', '#HomeSale', '#HomesForSale', '#Property', '#JustListed',
+            '#Properties', '#Investment', '#Home', '#Housing', '#Listing', '#Mortgage', '#EmptyNest'],
+        'cheap': [
+            '#FirstTimeHomeBuyer', '#DIY', '#DIYspecial', '#FixerUpper', '#Flipper', '#FlipHouse', '#TLCneeded',
+            '#DesignerSpecial', '#FirstHome', '#PricedToGo', '#BargainHunt', '#Bargain', '#MostBangForYourBuck'],
+        'medium': [
+            '#GreatValue', '#RightPrice', '#GreatDeal', '#DoneRight', '#PerfectPrice', '#Renovated'],
+        'expensive': [
+            '#DreamHouse', '#LuxuryRealEstate', '#LuxuryLiving', '#MillionDollarListing']
+    }
+
+    def __init__(self, url):
+        super().__init__(url)
         self.url = url
-        self.tags = tags
 
     @staticmethod
-    def get_images(driver):
-        images_block = driver.find_elements_by_class_name('slick-slide')[:5]
-        images = dict()
+    def get_id(card):
+        id_tag = card.select_one('span#mlsValue')
+        return id_tag.string.strip()
 
-        for image_block_object in images_block:
-            image_object = image_block_object.find_element_by_tag_name('img')
-            image_id = image_block_object.get_attribute('aria-describedby')
+    def get_images(self, card):
+        tags = card.select('div.primary-carousel img.slider-image')
 
-            image_lazy = image_object.get_attribute('data-lazy')
-            image_src = image_object.get_attribute('src')
-            image_link = image_src if image_src else image_lazy
-
-            if 'f_' in image_link:
-                images[image_id] = PosterHelper.crop_url(image_link)
+        images = list()
+        for tag in tags:
+            image_src = PosterHelper.crop_url(tag['data-lazy'])
+            images.append(self.url + image_src)
 
         return images
 
     @staticmethod
-    def get_summary(driver):
-        summary_object = driver.find_element_by_class_name('summary')
-        return summary_object.text
+    def get_summary(card):
+        summary = str()
+        summary_tag = card.select_one('div.summary')
+        summary_text = summary_tag.strings
+        for string in summary_text:
+            string = string.strip()
+            if string:
+                summary += string + ' '
+
+        return summary[:-1]
 
     @staticmethod
-    def get_payment(driver):
-        payment_object = driver.find_element_by_id('aria-estimatedpayment')
-        return payment_object.text
+    def get_price(card):
+        price_tag = card.select_one('span.price')
+        return price_tag.string.strip()
+
+    @staticmethod
+    def get_tags(price: str):
+        price = int(
+            price
+            .strip('$')
+            .replace(',', str()))
+
+        key_all = 'all'
+        key_price = 'expensive' \
+            if int(price) > 500000 else 'medium' \
+            if int(price) > 200000 else 'cheap'
+
+        return \
+            '#RealEstate' + \
+            ' ' + choice(HomeItem.tags_map.get(key_all)) + \
+            ' ' + choice(HomeItem.tags_map.get(key_price))
 
     def __get_info(self):
-        driver = webdriver.Chrome()
-        PosterHelper.get_ajax_page(driver, self.url)
+        page = requests.get(super().url)
+        soup = BeautifulSoup(page.text, 'html.parser')
+        card = soup.select_one('main.main-container div.row')
 
-        # images_local = dict()
-        images_remote = self.get_images(driver)
-        # for key in images_remote.keys():
-        #     images_local[key] = self.save_image(
-        #         images_remote[key], key)
+        self.id = self.get_id(card)
+        self.images = self.get_images(card)
+        self.summary = self.get_summary(card)
+        self.price = self.get_price(card)
 
-        self.images = list(images_remote.values())
-        self.summary = self.get_summary(driver)
-        self.deal = self.get_payment(driver)
-
-        driver.close()
+        return {
+            'link': self.url,
+            'images': self.images,
+        }
 
     def get_twitter_info(self):
-        self.__get_info()
+        info = self.__get_info()
 
-        message = self.tags
-        if len(self.deal):
-            message += ' ' + self.deal + '/m: '
+        info['text'] = \
+            self.get_tags(self.price) + ' ' + \
+            self.price + ': ' + self.summary
 
-        message += self.summary
-
-        return {
-            'link': self.url,
-            'text': message,
-            'images': self.images,
-        }
+        return info
 
     def get_facebook_info(self):
-        self.__get_info()
+        info = self.__get_info()
 
-        message = self.tags
-        if len(self.deal):
-            message += ' Monthly payment: only ' + self.deal + '! '
+        info['text'] = \
+            self.get_tags(self.price) + ' ' + \
+            'Price: ' + self.price + '! ' + \
+            self.summary
 
-        message += self.summary
-
-        return {
-            'link': self.url,
-            'text': message,
-            'images': self.images,
-        }
+        return info

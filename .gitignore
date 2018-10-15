@@ -1,4 +1,6 @@
 __pycache__
-pictures
+pictures/
+media/
+.idea/
 *.log
-.idea
+*.db
