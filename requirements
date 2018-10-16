@@ -6,7 +6,7 @@ requests
 hyper
 
 # social media
-facebook-sdk
+facebook-sdk==2.0.0
 python-twitter
 
 # short link generator
