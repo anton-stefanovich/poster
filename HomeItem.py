@@ -39,7 +39,7 @@ class HomeItem (PosterItem):
         images = list()
         for tag in tags:
             image_src = PosterHelper.crop_url(tag['data-lazy'])
-            images.append(self.url + image_src)
+            images.append(image_src.strip('/'))
 
         return images
 
