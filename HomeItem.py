@@ -33,13 +33,14 @@ class HomeItem (PosterItem):
         id_tag = card.select_one('span#mlsValue')
         return id_tag.string.strip()
 
-    def get_images(self, card):
+    @staticmethod
+    def get_images(card):
         tags = card.select('div.primary-carousel img.slider-image')
 
         images = list()
         for tag in tags:
             image_src = PosterHelper.crop_url(tag['data-lazy'])
-            images.append(image_src.strip('/'))
+            images.append('http:' + image_src)
 
         return images
 
