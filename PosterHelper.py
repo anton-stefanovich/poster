@@ -142,14 +142,11 @@ class PosterHelper:
         api = facebook.GraphAPI(token)
         info = record.get_facebook_info()
 
+        link = info['link']
+
         images = info['images']
         image = images[0]\
             if images and len(images) else None
-
-        facebook_data = {
-            'picture': image,
-            'link': info['link'],
-        }
 
         message = PosterHelper.crop_text(
             info['text'], message_length,
@@ -160,7 +157,13 @@ class PosterHelper:
         for attempt in range(PosterHelper.ATTEMPTS_FACEBOOK):
             try:
                 print('Attempt #%d:' % (attempt + 1))
-                api.put_wall_post(message, facebook_data)
+                api.put_object(
+                    parent_object="me",
+                    connection_name="feed",
+                    message=message,
+                    picture=image,
+                    link=link)
+
                 print('Message posted successfully')
                 break
 
