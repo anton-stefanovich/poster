@@ -13,10 +13,14 @@ from AutoMaster import AutoMaster
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--repeat', type=int, default=1)
-    parser.add_argument('--delay', type=int, default=3600)
-    parser.add_argument('--media', '--destination', type=str, choices=['twitter', 'facebook'])
-    parser.add_argument('--type', type=str, choices=['test', 'home', 'auto'])
-    parser.add_argument('--debug', type=bool, nargs='?', const=True, default=False)
+    parser.add_argument('--delay',  type=int, default=0)
+
+    parser.add_argument('--type',  type=str, choices=['test', 'home', 'auto'])
+    parser.add_argument('--media', type=str, choices=['twitter', 'facebook'])
+
+    bool_true = ['true', 'yes', '1']
+    parser.add_argument('--debug', default=False,
+                        type=lambda s: s.lower() in bool_true)
     args = parser.parse_args()
 
     return TestMaster.run() if args.type == 'test' else action(args)
