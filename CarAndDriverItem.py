@@ -59,7 +59,7 @@ class CarAndDriverItem (PosterItem):
 
                 images.append(
                     PosterHelper.crop_url(
-                        src_on_show or src_preload))
+                        src_preload or CarAndDriverItem.__URL_IMAGE_BASE__ + src_on_show))
 
         return images
 
